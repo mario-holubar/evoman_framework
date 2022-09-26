@@ -116,7 +116,7 @@ for it in range(1,runs+1):
     
     # Create a path for the pickle file, so the algorithm knows where to save it
     picklepath = run_name + "/" + algorithm + "_e" + str(enemy) + ".pkl"
-    logpath = run_name + "/data_run_1.txt"
+    logpath = run_name + "/data_run_" + str(it-1) + ".txt"
     
     if algorithm == 'NEAT':
         optimizer = NEAT_Spealist(env, gens, picklepath, logpath)
