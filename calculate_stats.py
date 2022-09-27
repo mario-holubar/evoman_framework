@@ -7,7 +7,7 @@
 # User arguments: 
 #   1) algorithm (NEAT or SANE) 
 #   2) enemy number (1-8) 
-#   3) path to the data files (default: data/algorithm_e#.txt where algorithm = standard or SANE and # is the enemy number)
+#   3) path to the data files (default: data/algorithm_e# where algorithm = NEAT or SANE and # is the enemy number)
 
 # The output file will be saved in the given directory containing average_mean, std_mean, average_max, std_max
 
