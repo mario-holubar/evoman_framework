@@ -10,8 +10,6 @@ class SANE_Specialist():
         self.neurons_per_network = int(cfg['neurons_per_network'])
         self.n_networks = int(cfg['n_networks'])
         self.mutation_sigma = float(cfg['mutation_sigma'])
-        self.survivor_rate = float(cfg['survivor_rate'])
-        self.parent_rate = float(cfg['parent_rate'])
 
         self.n_inputs = env.get_num_sensors()
         self.n_bias = 1
@@ -66,18 +64,20 @@ class SANE_Specialist():
         # Return average fitness of each neuron and fitnesses of the networks
         return neuron_fitnesses / counts, network_fitnesses
 
-    # Tournament selection with k=2. sorted_pop should be sorted by fitness from low to high
+    # Tournament selection with k=2. sorted_pop should be sorted by fitness from high to low
     def tournament_selection(self, sorted_pop):
         c0 = np.random.randint(0, len(sorted_pop))
         c1 = np.random.randint(0, len(sorted_pop))
-        return sorted_pop[max(c0, c1)]
+        return sorted_pop[min(c0, c1)]
 
     # One-point crossover of neurons' weights
     def crossover(self, p0, p1):
         s = np.random.randint(0, len(p0))
-        child = p0.copy()
-        child[s:] = p1[s:]
-        return child
+        c0 = p0.copy()
+        c0[s:] = p1[s:]
+        c1 = p1.copy()
+        c1[s:] = p0[s:]
+        return c0, c1
 
     # Mutate the whole population by adding some Gaussian noise to all weights
     def mutate_all(self):
@@ -85,17 +85,27 @@ class SANE_Specialist():
 
     # Perform parent selection, crossover and mutation
     def new_gen(self, fitnesses):
-        sorted_pop = self.pop[np.argsort(fitnesses)]
-        survivors = sorted_pop[round(self.survivor_rate*self.total_neurons):]
-        parents = sorted_pop[round(self.parent_rate*self.total_neurons):]
+        # Sort population in descending order by fitness (best first)
+        sorted_pop = self.pop[np.argsort(-fitnesses)]
 
+        # Create offspring as described in the SANE paper
+        survivors = sorted_pop[:int(0.5*self.total_neurons)]
+        parents = sorted_pop[:int(0.25*self.total_neurons)]
         offspring = list(survivors)
+        for i, p0 in enumerate(parents):
+            p1 = parents[np.random.randint(i+1)]
+            c0, c1 = self.crossover(p0, p1)
+            offspring.append(c0)
+            offspring.append(c1)
+
+        # If population size is not cleanly divisible by 4, add missing individuals to reach desired number
         while len(offspring) < self.total_neurons:
             p0 = self.tournament_selection(parents)
             p1 = self.tournament_selection(parents)
-            child = self.crossover(p0, p1)
-            offspring.append(child)
+            c0, _ = self.crossover(p0, p1)
+            offspring.append(c0)
 
+        assert(len(offspring) == len(self.pop))
         self.pop = np.array(offspring)
         self.mutate_all()
 
