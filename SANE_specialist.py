@@ -10,8 +10,6 @@ class SANE_Specialist():
         self.neurons_per_network = int(cfg['neurons_per_network'])
         self.n_networks = int(cfg['n_networks'])
         self.mutation_sigma = float(cfg['mutation_sigma'])
-        self.survivor_rate = float(cfg['survivor_rate'])
-        self.parent_rate = float(cfg['parent_rate'])
 
         self.n_inputs = env.get_num_sensors()
         self.n_bias = 1
