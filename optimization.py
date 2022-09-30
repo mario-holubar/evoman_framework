@@ -41,6 +41,8 @@ if algorithm == 'neat':
     algorithm = 'NEAT'
 if algorithm == 'sane': 
     algorithm = 'SANE'
+
+if algorithm == 'SANE':
     config = configparser.RawConfigParser()
     config.read('SANE.cfg')
     sane_cfg = dict(config.items('SANE'))
