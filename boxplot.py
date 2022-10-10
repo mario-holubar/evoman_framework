@@ -6,27 +6,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# GAINS FOR ENEMY 3
-list_gain_NEAT = [38, 46, 64, 32, 58, 
-                  66, 42, 36, 32, 60] # ONE MORE NEEDED
+# Fill in the values for NEAT here
+list_gain_NEAT = [32.103, 89.18932, 25.812, 49.1834, 67.1283, 
+             49.81934, 84.8192, 91.1230, 48.1903, 85.12903]
 
-list_gain_SANE = [32, 56, 44, 20, 32,
-                  28, 46, 14, 40, 28]
-
-# GAINS FOR ENEMY 4
-# list_gain_NEAT = [50.8, 50.2, 50.2, 24.4, 33.4, 
-#              47.8, 53.8, 52, 47.2, 56.2] 
-
-# list_gain_SANE = [68.2, -30, -30, -30, -10,
-#                   -40, -40, 19.6, -30, -60]
-
-# GAINS FOR ENEMY 6
-# list_gain_NEAT = [38.2, 43.6, 78.4, 53.8, 49.6,
-#              45.4, 38.8, 29.2, 74.2, 85.0] 
-
-# list_gain_SANE = [57.18, 57.4, 66.49, 65.82, 48.38,
-#                   66.14, 66.57, 65.43, 55.33, 66.29]
-
+# Fill in the values for SANE here
+list_gain_SANE = [23.2305, 49.1283, 34.2030, 10.2390, 39.023,
+                  59.2903, 34.249, 21.394, 22.2939, 45.1390]
 
 both = [list_gain_NEAT, list_gain_SANE]
 
@@ -34,6 +20,6 @@ plt.boxplot(both, labels=['NEAT', 'SANE'])
 
 # Change number to match the enemy the data is for
 plt.title("Individual gain of NEAT and SANE against enemy 3", fontsize=15)
+plt.xlabel("Generation", fontsize=17)
 plt.ylabel("Individual gain", fontsize=17)
-plt.xticks(fontsize=17)
 plt.show()

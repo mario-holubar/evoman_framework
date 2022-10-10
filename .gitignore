@@ -1,7 +1,9 @@
-
+optimizations
+solutions
+specialists
+data
+neat-checkpoint*
 *.pyc
 dummy_demo/evoman_logs.txt
-data
-optimizations
-specialists
-solutions
+*~
+*.swp
