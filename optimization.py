@@ -21,7 +21,10 @@
 from multiprocessing.sharedctypes import Value
 import sys, os
 import configparser
+from time import time
 
+# Comment this out to show the game window
+os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 sys.path.insert(0, 'evoman') 
 from environment import Environment
@@ -29,40 +32,28 @@ from NEAT_controller import NeatController
 from demo_controller import player_controller
 from NEAT_specialist import NEAT_Spealist
 from SANE_specialist import SANE_Specialist
+from ESP import ESP
 
 # Read command line arguments
-if not(len(sys.argv) == 3 or len(sys.argv) == 4):
-    sys.exit("Error: please specify:\n1) the algorithm (NEAT or SANE or ESP) \n2) the enemy (1-8) OR the enemies, 123 = enemy 1, 2 and 3\n3) number of individual optimizations (1-10) (default:1)")
+if len(sys.argv) < 3 or len(sys.argv) > 5:
+    sys.exit("Error: please specify:\n1) the algorithm (NEAT, SANE or ESP) \n2) the enemy (1-8) OR the enemies (123 = enemy 1, 2 and 3)\n3) number of individual optimizations (1-10) (default:1)\n4) the number of generations per run (default: 30)")
 
-# First argument must indicate the algorithm - 'standard' or 'SANE' or 'ESP'
-algorithm = sys.argv[1]
-
-if algorithm == 'neat': 
-    algorithm = 'NEAT'
-    
-if algorithm == 'sane': 
-    algorithm = 'SANE'
-
-if algorithm == 'esp':
-    algorithm = 'ESP'
-
-if algorithm == 'SANE':
-    config = configparser.RawConfigParser()
-    config.read('SANE.cfg')
-    sane_cfg = dict(config.items('SANE'))
-
-#print("First argument: ", algorithm)
-
-if not(algorithm == 'NEAT' or algorithm == 'SANE' or algorithm == 'ESP'):
+# First argument must indicate the algorithm - 'NEAT' or 'SANE' or 'ESP'
+algorithm = sys.argv[1].upper()
+if algorithm not in ['NEAT', 'SANE', 'ESP']:
     sys.exit("Error: please specify the algorithm using 'NEAT' or 'SANE' or 'ESP' for upgraded SANE")
+
+# Load config
+if algorithm in ['SANE', 'ESP']:
+    config = configparser.RawConfigParser()
+    config.read(f'{algorithm}.cfg')
+    cfg = dict(config.items(algorithm))
 
 # Second argument must specify the enemy to be trained on - integer from 1 - 8
 try:
     enemy = int(sys.argv[2])
 except TypeError:
     sys.exit("Error: please specify the enemy using an integer from 1 to 8 OR an integer containing multiple enemies from 1-8 (eg. 123 = enemies 1,2,3).")
-    
-#print("Second argument: ", enemy)
 
 # Check if one or multiple enemies were provided
 if enemy > 0 and enemy < 9:
@@ -84,8 +75,6 @@ if len(sys.argv) == 4:
         runs = int(sys.argv[3])
     except TypeError:
         sys.exit("Error: please specify how many optimizations you want to run (1-10). Default: 1")
-    
-    #print("Third argument: ", runs)
         
     if not(runs > 0 and runs < 11):
         sys.exit("Error: please specify how many optimizations you want to run (1-10). Default: 1")
@@ -96,15 +85,15 @@ print(runs, "individual experiment(s) will be run.")
 
 
 
-# Ask user for the number of generations
-while True:
+# Fourth argument indicates the number of generations per run (default: 30)
+if len(sys.argv) == 5:
     try:
-        gens = int(input("Enter the number of generations: "))
-    except ValueError:
-        print("Please enter a number")
-    else:
-        break
-        
+        gens = int(sys.argv[4])
+    except TypeError:
+        sys.exit("Error: please specify how many generations you want to run. Default: 30")
+else:
+    gens = 1
+
 # Default experiment name. Comment to specify your own
 experiment_name = "optimizations/" + algorithm + "_e" + sys.argv[2] + "_gen" + str(gens)
 #experiment_name = "optimizations/[insert name here]"
@@ -114,12 +103,13 @@ if not os.path.exists(experiment_name):
     os.makedirs(experiment_name)
     
 # Initialize environment
-if mode == 'no': 
+if mode == 'no':
     enemies = [enemy]
 
 # Select controller according to the algorithm
 if algorithm == 'NEAT': control = NeatController()
-else: control = player_controller(int(sane_cfg['neurons_per_network']))
+elif algorithm == 'SANE': control = player_controller(int(cfg['neurons_per_network']))
+elif algorithm == 'ESP': control = player_controller(int(cfg['n_subpopulations']))
 
 env = Environment(experiment_name=experiment_name,
                   multiplemode=mode,
@@ -128,7 +118,7 @@ env = Environment(experiment_name=experiment_name,
                   player_controller=control,            
                   enemymode="static",
                   level=2,
-                  #logs = "off",
+                  logs = "off",
                   speed="fastest")
     
 # Run the optimizations the specified number of times
@@ -144,10 +134,18 @@ for it in range(1,runs+1):
     picklepath = run_name + "/" + algorithm + "_e" + str(enemy) + ".pkl"
     logpath = run_name + "/data_run_" + str(it-1) + ".txt"
     
+    tstart = time()
+    
     if algorithm == 'NEAT':
         optimizer = NEAT_Spealist(env, gens, picklepath, logpath)
-    else:
-        optimizer = SANE_Specialist(env, gens, picklepath, logpath, sane_cfg)
+    elif algorithm == 'SANE':
+        optimizer = SANE_Specialist(env, gens, picklepath, logpath, cfg)
+    elif algorithm == 'ESP':
+        optimizer = ESP(env, gens, picklepath, logpath, cfg)
+    
+    tend = time()
+    diff = int(tend - tstart)
+    print(f"Total time for run {it}: {diff // 60}:{diff % 60}")
     
     
 
