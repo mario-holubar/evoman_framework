@@ -10,9 +10,6 @@
 #   3) path to the data files (default: data/algorithm_e# where algorithm = NEAT or SANE and # is the enemy number)
 
 # The output file will be saved in the given directory containing average_mean, std_mean, average_max, std_max
-
-# To test, data/standard_e1 contains 10 files with some random data to run the program on. 
-# Run Python calculate_stats.py standard 1
 ####################
 
 import numpy as np
@@ -135,20 +132,3 @@ plt.title(title, fontsize=15)
 plt.legend(loc="upper left", fontsize=15)
 
 plt.show()
-
-
-
-# -> 10 runs per enemy with the same algorithm parameters etc. is required for the report
-# for the report, we calculate the average and std for the mean and maximum of the fitness, per generation
-    # SO for each generation, and each run: 
-    # 1. What is the mean fitness of the population in this generation?
-    # 2. What is the maximum fitness of the population in this generation?
-    
-    # THEN for each generation:
-    # 1. What is the AVERAGE across all runs of the mean fitness in this generation?
-    # 2. What is the AVERAGE across all runs of the maximum fitness in this generation?
-    
-    # Then do the same for standard deviation per generation
-    
-# each of these 10 runs will come up with a 'best solution' (= highest player energy or individual gain), so we have 10 'best solutions' per enemy for each algorithm
-# run each solution 5 times (using run_specialist.py)

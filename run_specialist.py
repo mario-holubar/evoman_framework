@@ -26,16 +26,22 @@ import pickle
 
 # Read command line arguments
 if not(len(sys.argv) == 3 or len(sys.argv) == 4):
-    sys.exit("Error: please specify:\n1) the algorithm (NEAT or SANE)\n2) the enemy (1-8)\n3) the number of games to run (1-5) (default: 1)")
+    sys.exit("Error: please specify:\n1) the algorithm (NEAT or SANE or ESP)\nthe enemy (1-8) OR the enemies, 123 = enemy 1, 2\n3) the number of games to run (1-5) (default: 1)")
 
 # First argument must indicate the algorithm - 'NEAT' or 'SANE'
 algorithm = sys.argv[1]
 
 if algorithm == 'neat': 
     algorithm = 'NEAT'
+
+if algorithm == 'sane': 
+    algorithm = 'SANE'
+
+if algorithm == 'esp':
+    algorithm = 'ESP'
 #print("First argument: ", algorithm)
 
-if not(algorithm == 'NEAT' or algorithm == 'SANE'):
+if not(algorithm == 'NEAT' or algorithm == 'SANE' or algorithm == 'ESP'):
     sys.exit("Error: please specify the algorithm using 'NEAT' or 'SANE'.")
 
 # Second argument must specify the enemy to be trained on - integer from 1 - 8
@@ -46,8 +52,19 @@ except TypeError:
     
 #print("Second argument: ", enemy)
 
-if not(enemy > 0 and enemy < 9):
-    sys.exit("Error: please specify the enemy using an integer from 1 to 8.")
+# Check if one or multiple enemies were provided
+if enemy > 0 and enemy < 9:
+    mode = 'no'
+    print("You have selected the following settings:\nAlgorithm:", algorithm, "\nMultiple mode?", mode, "\nEnemy: ", enemy)
+else:
+    mode = 'yes'
+    enemy = str(enemy)
+    enemies = []
+    # Add all enemies to a list
+    for e in enemy:
+        if int(e) < 9:
+            enemies.append(int(e))
+    print("You have selected the following settings:\nAlgorithm:", algorithm, "\nMultiple mode?", mode, "\nEnemies: ", enemies)
 
 # Third argument must specify how many times to run the solution - integer between 1 and 5 (optional)
 if len(sys.argv) == 4:
@@ -64,7 +81,7 @@ else:
     iterations = 1
 
 print("\n\n")
-print(iterations, "game(s) will be played against enemy", enemy, "using the saved solution of algorithm:", algorithm)
+print(iterations, "game(s) will be played.")
 
 
 # Create relevant file names and environment
@@ -76,7 +93,7 @@ experiment_name = "specialists/" + algorithm + "_e" + str(enemy) + "_i" + str(it
 if algorithm == "NEAT":
     solutionfile = "solutions/" + algorithm + "_e" + str(enemy) + ".pkl"
 else:
-    solutionfile = "solutions/" + algorithm + "_e" + str(enemy) + ".txt"
+    solutionfile = "solutions/" + algorithm + "_e" + str(enemy) + ".pkl"
 #solutionfile = "solutions/[insert name here]"
 
 gain_path = experiment_name + "/gain.txt"
@@ -93,8 +110,11 @@ else:
     (n_neurons, sane_weights) = pickle.load(open(solutionfile, 'rb'))
     control = player_controller(n_neurons)
 
-enemies = [enemy]
+if mode == 'no': 
+    enemies = [enemy]
+    
 env = Environment(experiment_name=experiment_name,
+                  multiplemode=mode,
                   playermode="ai",
                   enemies = enemies,
 				  player_controller= control,
