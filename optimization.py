@@ -3,8 +3,8 @@
 # Specify the number of runs if you want to run more than one individual optimization
 
 # User arguments: 
-#   1) algorithm (NEAT or SANE)
-#   2) enemy number (1-8)
+#   1) algorithm (NEAT or SANE or ESP)
+#   2) enemy number (1-8) or multiple enemies (1-8)
 #   3) number of optimizations to run (1-10) (default: 1)
 
 # The program will ask how many generations the algorithm should run
@@ -32,9 +32,9 @@ from SANE_specialist import SANE_Specialist
 
 # Read command line arguments
 if not(len(sys.argv) == 3 or len(sys.argv) == 4):
-    sys.exit("Error: please specify:\n1) [task1] the algorithm (NEAT or SANE) OR [task2] 'o' for offensive and 'd' for defensive \n2) [task1] the enemy (1-8) OR [task2] the enemies (1-8), 123 = enemy 1, 2 and 3\n3) number of individual optimizations (1-10) (default:1)")
+    sys.exit("Error: please specify:\n1) the algorithm (NEAT or SANE or ESP) \n2) the enemy (1-8) OR the enemies, 123 = enemy 1, 2 and 3\n3) number of individual optimizations (1-10) (default:1)")
 
-# First argument must indicate the algorithm - 'standard' or 'SANE'
+# First argument must indicate the algorithm - 'standard' or 'SANE' or 'ESP'
 algorithm = sys.argv[1]
 
 if algorithm == 'neat': 
@@ -43,27 +43,24 @@ if algorithm == 'neat':
 if algorithm == 'sane': 
     algorithm = 'SANE'
 
-if algorithm == 'o':
-    algorithm = 'offensive'
+if algorithm == 'esp':
+    algorithm = 'ESP'
 
-if algorithm == 'd':
-    algorithm = 'defensive'
-
-if algorithm == 'SANE' or algorithm == 'offensive' or algorithm == 'defensive':
+if algorithm == 'SANE':
     config = configparser.RawConfigParser()
     config.read('SANE.cfg')
     sane_cfg = dict(config.items('SANE'))
 
 #print("First argument: ", algorithm)
 
-if not(algorithm == 'NEAT' or algorithm == 'SANE' or algorithm == 'offensive' or algorithm == 'defensive'):
-    sys.exit("Error: please specify the algorithm using [task1] 'NEAT' or 'SANE' OR [task2] 'o' for offensive or 'd' for defensive")
+if not(algorithm == 'NEAT' or algorithm == 'SANE' or algorithm == 'ESP'):
+    sys.exit("Error: please specify the algorithm using 'NEAT' or 'SANE' or 'ESP' for upgraded SANE")
 
 # Second argument must specify the enemy to be trained on - integer from 1 - 8
 try:
     enemy = int(sys.argv[2])
 except TypeError:
-    sys.exit("Error: please specify the enemy [Task1] using an integer from 1 to 8 OR [Task2] an integer containing multiple enemies from 1-8 (eg. 123 = enemies 1,2,3).")
+    sys.exit("Error: please specify the enemy using an integer from 1 to 8 OR an integer containing multiple enemies from 1-8 (eg. 123 = enemies 1,2,3).")
     
 #print("Second argument: ", enemy)
 
