@@ -92,7 +92,7 @@ if len(sys.argv) == 5:
     except TypeError:
         sys.exit("Error: please specify how many generations you want to run. Default: 30")
 else:
-    gens = 1
+    gens = 30
 
 # Default experiment name. Comment to specify your own
 experiment_name = "optimizations/" + algorithm + "_e" + sys.argv[2] + "_gen" + str(gens)
