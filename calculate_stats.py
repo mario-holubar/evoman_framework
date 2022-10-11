@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 
 # Read command line arguments
 if not(len(sys.argv) == 3 or len(sys.argv) == 4):
-    sys.exit("Error: please specify:\n1) the algorithm (NEAT or SANE)\n2) the enemy (1-8)\n3) the path to the data files (default: data/algorithm_e# where algorithm = 'NEAT' or 'SANE' and # is the enemy number)")
+    sys.exit("Error: please specify:\n1) the algorithm (NEAT or SANE or ESP)\n2) the enemy (1-8) or muliple enemies (no spaces, 123 = enemy 1,2 and 3)\n3) the path to the data files (default: data/algorithm_e# where algorithm = 'NEAT' or 'SANE' or 'ESP and # is the enemy number(s))")
 
 # First argument must indicate the algorithm - 'standard' or 'SANE'
 algorithm = sys.argv[1]
@@ -30,21 +30,31 @@ if algorithm == 'sane':
 if algorithm == 'neat': 
     algorithm = 'NEAT'
 
+if algorithm == 'esp':
+    algorithm = 'ESP'
+
 #print("First argument: ", algorithm)
 
-if not(algorithm == 'NEAT' or algorithm == 'SANE'):
-    sys.exit("Error: please specify the algorithm using 'NEAT' or 'SANE'.")
+if not(algorithm == 'NEAT' or algorithm == 'SANE' or algorithm == 'ESP'):
+    sys.exit("Error: please specify the algorithm using 'NEAT' or 'SANE' or 'ESP'.")
 
 # Second argument must specify the enemy to be trained on - integer from 1 - 8
 try:
     enemy = int(sys.argv[2])
 except TypeError:
     sys.exit("Error: please specify the enemy using an integer from 1 to 8.")
+
+if enemy > 8:
+    enemy = str(enemy)
+    enemies = []
+    # Add all enemies to a list
+    for e in enemy:
+        if int(e) < 9:
+            enemies.append(int(e))
+else:
+    enemies = [enemy]
     
 #print("Second argument: ", enemy)
-
-if not(enemy > 0 and enemy < 9):
-    sys.exit("Error: please specify the enemy using an integer from 1 to 8.")
     
 # Third argument must specify the path containing the data files (optional)
 if (len(sys.argv) == 4):
@@ -56,7 +66,7 @@ else:
     path = "data/" + algorithm + "_e" + str(enemy)
 
 
-print("Calculating average and std of 10 runs for", algorithm, "algorithm against enemy", str(enemy) + " using data in", path)
+print("Calculating average and std of 10 runs for", algorithm, "algorithm against enemy", enemies + " using data in", path)
 
 # Dictionary that will contain key-value pairs where the key is the run # and value is the list of contents
 run_dict = {}
@@ -127,7 +137,7 @@ plt.fill_between(range(len(list_average_max)), list_average_max-list_std_max,
 
 plt.xlabel("Generation", fontsize=17)
 plt.ylabel("Fitness", fontsize=17)
-title = "Fitness plot of " + algorithm + " algorithm against enemy " + str(enemy)
+title = "Fitness plot of " + algorithm + " algorithm against enemy " + enemies
 plt.title(title, fontsize=15)
 plt.legend(loc="upper left", fontsize=15)
 

@@ -2,10 +2,11 @@ import numpy as np
 import pickle
 
 class SANE_Specialist():
-    def __init__(self, env, gens, picklepath, logpath, cfg):
+    def __init__(self, env, gens, picklepath, logpath, cfg, mode):
         self.env = env
         self.picklepath = picklepath
         self.logpath = logpath
+        self.multiple = mode
         self.total_neurons = int(cfg['total_neurons'])
         self.neurons_per_network = int(cfg['neurons_per_network'])
         self.n_networks = int(cfg['n_networks'])
@@ -50,6 +51,8 @@ class SANE_Specialist():
             net = self.create_network(select)
             # Evaluate network
             fitness, _, _, _, = self.env.play(pcont=net)
+            if self.multiple == 'yes':
+                fitness = self.env.cons_multi(values=fitness)
             network_fitnesses[i] = fitness
             # Save network if it is better than all previous ones
             if fitness > self.best_network_fitness:

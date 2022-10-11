@@ -16,7 +16,7 @@ import pickle
 # game.state_to_log()  # checks environment state
 
 class NEAT_Spealist():
-    def __init__(self, env, gens, picklepath, logpath):
+    def __init__(self, env, gens, picklepath, logpath, mode):
         neat_dir = os.path.dirname(__file__)
         neat_path = os.path.join(neat_dir, "NEAT-config.txt")
         
@@ -24,6 +24,7 @@ class NEAT_Spealist():
         self.gens = gens
         self.picklepath = picklepath
         self.logpath = logpath
+        self.multiple = mode
         
         self.neat_execute(neat_path)
         
@@ -31,6 +32,9 @@ class NEAT_Spealist():
     # all of this interacts with numpy.float64 out of Environment.py
     def game_state(self, game, x):
         fitness, phealth, ehealth, time = game.play(pcont=x)
+        if self.multiple == 'yes':
+            fitness = game.cons_multi(values=fitness)
+            return fitness
         return fitness
 
     def genome_evaluation(self, genomes, config):

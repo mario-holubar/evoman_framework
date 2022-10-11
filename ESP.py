@@ -3,10 +3,11 @@ import pickle
 from tqdm import tqdm
 
 class ESP():
-    def __init__(self, env, gens, picklepath, logpath, cfg):
+    def __init__(self, env, gens, picklepath, logpath, cfg, mode):
         self.env = env
         self.picklepath = picklepath
         self.logpath = logpath
+        self.multiple = mode
         self.n_subpopulations = int(cfg['n_subpopulations'])
         self.neurons_per_subpopulation = int(cfg['neurons_per_subpopulation'])
         self.n_networks = int(cfg['n_networks'])
@@ -52,6 +53,8 @@ class ESP():
             net = self.create_network(select)
             # Evaluate network
             fitness, _, _, _, = self.env.play(pcont=net)
+            if self.multiple == 'yes':
+                fitness = self.env.cons_multi(values=fitness)
             network_fitnesses[i] = fitness
             # Save network if it is better than all previous ones
             if fitness > self.best_network_fitness:

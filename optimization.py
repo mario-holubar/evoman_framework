@@ -137,11 +137,11 @@ for it in range(1,runs+1):
     tstart = time()
     
     if algorithm == 'NEAT':
-        optimizer = NEAT_Spealist(env, gens, picklepath, logpath)
+        optimizer = NEAT_Spealist(env, gens, picklepath, logpath, mode)
     elif algorithm == 'SANE':
-        optimizer = SANE_Specialist(env, gens, picklepath, logpath, cfg)
+        optimizer = SANE_Specialist(env, gens, picklepath, logpath, cfg, mode)
     elif algorithm == 'ESP':
-        optimizer = ESP(env, gens, picklepath, logpath, cfg)
+        optimizer = ESP(env, gens, picklepath, logpath, cfg, mode)
     
     tend = time()
     diff = int(tend - tstart)
