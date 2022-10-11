@@ -1,28 +1,29 @@
 import numpy as np
 import pickle
+from tqdm import tqdm
 
-class SANE_Specialist():
+class ESP():
     def __init__(self, env, gens, picklepath, logpath, cfg, mode):
         self.env = env
         self.picklepath = picklepath
         self.logpath = logpath
         self.multiple = mode
-        self.total_neurons = int(cfg['total_neurons'])
-        self.neurons_per_network = int(cfg['neurons_per_network'])
+        self.n_subpopulations = int(cfg['n_subpopulations'])
+        self.neurons_per_subpopulation = int(cfg['neurons_per_subpopulation'])
         self.n_networks = int(cfg['n_networks'])
         self.mutation_sigma = float(cfg['mutation_sigma'])
 
         self.n_inputs = env.get_num_sensors()
         self.n_bias = 1
         self.n_outputs = 5
-        weights_per_neuron = self.n_inputs + self.n_bias + self.n_outputs
-        self.pop = np.random.uniform(-1, 1, (self.total_neurons, weights_per_neuron))
+        self.weights_per_neuron = self.n_inputs + self.n_bias + self.n_outputs
+        self.pop = np.random.uniform(-1, 1, (self.n_subpopulations, self.neurons_per_subpopulation, self.weights_per_neuron))
         self.best_network_fitness = 0.0
 
         with open(logpath, 'w') as logfile:
             logfile.write("")
 
-        self.sane_execute(gens)
+        self.esp_execute(gens)
 
     # Create network from list of neuron indices
     def create_network(self, select):
@@ -40,13 +41,14 @@ class SANE_Specialist():
 
     # Create networks and run the simulation, then assign fitness to neurons
     def evaluate(self):
-        neuron_fitnesses = np.zeros(self.total_neurons)
+        neuron_fitnesses = np.zeros((self.n_subpopulations, self.neurons_per_subpopulation))
         network_fitnesses = np.zeros(self.n_networks)
-        counts = np.zeros(self.total_neurons)
+        counts = np.zeros((self.n_subpopulations, self.neurons_per_subpopulation))
 
-        for i in range(self.n_networks):
+        for i in tqdm(range(self.n_networks), leave=False):
             # Select random neurons to form a network
-            select = np.random.choice(self.total_neurons, self.neurons_per_network, replace=False)
+            select = np.random.choice(self.neurons_per_subpopulation, self.n_subpopulations)
+            select = (np.arange(self.n_subpopulations), select)
             counts[select] += 1
             net = self.create_network(select)
             # Evaluate network
@@ -57,7 +59,7 @@ class SANE_Specialist():
             # Save network if it is better than all previous ones
             if fitness > self.best_network_fitness:
                 with open(self.picklepath, 'wb') as f:
-                    pickle.dump((self.neurons_per_network, net), f)
+                    pickle.dump((self.n_subpopulations, net), f)
                 self.best_network_fitness = fitness
             # Add fitness to each neuron's cumulative fitness value
             neuron_fitnesses[select] += fitness
@@ -75,11 +77,15 @@ class SANE_Specialist():
 
     # One-point crossover of neurons' weights
     def crossover(self, p0, p1):
-        s = np.random.randint(0, len(p0))
+        '''s = np.random.randint(0, len(p0))
         c0 = p0.copy()
         c0[s:] = p1[s:]
         c1 = p1.copy()
         c1[s:] = p0[s:]
+        return c0, c1'''
+        s = np.random.choice([0, 1], p0.shape)
+        c0 = s * p0 + (1 - s) * p1
+        c1 = s * p1 + (1 - s) * p0
         return c0, c1
 
     # Mutate the whole population by adding some Gaussian noise to all weights
@@ -88,28 +94,37 @@ class SANE_Specialist():
 
     # Perform parent selection, crossover and mutation
     def new_gen(self, fitnesses):
-        # Sort population in descending order by fitness (best first)
-        sorted_pop = self.pop[np.argsort(-fitnesses)]
-
-        # Create offspring as described in the SANE paper
-        survivors = sorted_pop[:int(0.5*self.total_neurons)]
-        parents = sorted_pop[:int(0.25*self.total_neurons)]
-        offspring = list(survivors)
+        '''offspring = list(survivors)
         for i, p0 in enumerate(parents):
             p1 = parents[np.random.randint(i+1)]
             c0, c1 = self.crossover(p0, p1)
             offspring.append(c0)
-            offspring.append(c1)
+            offspring.append(c1)'''
+        all_offspring = []
+        #print(fitnesses.mean(1) - fitnesses.mean())
+        for i in range(self.n_subpopulations):
+            # Sort population in descending order by fitness (best first)
+            sorted_pop = self.pop[i, np.argsort(-fitnesses[i])]
+            # Create offspring
+            survivors = sorted_pop[:int(0.5*self.neurons_per_subpopulation)]
+            parents = sorted_pop[:int(0.25*self.neurons_per_subpopulation)]
+            #new = np.random.normal(0, 0.5, (int(0.125*self.neurons_per_subpopulation), self.weights_per_neuron))
+            offspring = list(survivors)
+            #offspring += list(new)
+            for i, p0 in enumerate(parents):
+                p1 = parents[np.random.randint(i+1)]
+                c0, c1 = self.crossover(p0, p1)
+                offspring.append(c0)
+                offspring.append(c1)
+            '''while len(offspring) < self.neurons_per_subpopulation:
+                p0 = self.tournament_selection(parents)
+                p1 = self.tournament_selection(parents)
+                c0, _ = self.crossover(p0, p1)
+                offspring.append(c0)'''
+            all_offspring.append(offspring)
 
-        # If population size is not cleanly divisible by 4, add missing individuals to reach desired number
-        while len(offspring) < self.total_neurons:
-            p0 = self.tournament_selection(parents)
-            p1 = self.tournament_selection(parents)
-            c0, _ = self.crossover(p0, p1)
-            offspring.append(c0)
-
-        assert(len(offspring) == len(self.pop))
-        self.pop = np.array(offspring)
+        assert(np.array(all_offspring).shape == self.pop.shape)
+        self.pop = np.array(all_offspring)
         self.mutate_all()
 
     # Log fitness stats
@@ -122,7 +137,7 @@ class SANE_Specialist():
             logfile.write(f"{fmean} {fmax}\n")
 
     # Run the GA
-    def sane_execute(self, n_gens):
+    def esp_execute(self, n_gens):
         for gen in range(n_gens):
             neuron_fitnesses, network_fitnesses = self.evaluate()
             self.log(gen, network_fitnesses)

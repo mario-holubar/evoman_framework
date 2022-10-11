@@ -90,10 +90,7 @@ experiment_name = "specialists/" + algorithm + "_e" + str(enemy) + "_i" + str(it
 #experiment_name = "optimizations/[insert name here]"
 
 # Default solutionfile. Comment to specify your own
-if algorithm == "NEAT":
-    solutionfile = "solutions/" + algorithm + "_e" + str(enemy) + ".pkl"
-else:
-    solutionfile = "solutions/" + algorithm + "_e" + str(enemy) + ".pkl"
+solutionfile = "solutions/" + algorithm + "_e" + str(enemy) + ".pkl"
 #solutionfile = "solutions/[insert name here]"
 
 gain_path = experiment_name + "/gain.txt"

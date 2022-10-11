@@ -99,12 +99,21 @@ print(runs, "individual experiment(s) will be run.")
 # Ask user for the number of generations
 while True:
     try:
+<<<<<<< Updated upstream
         gens = int(input("Enter the number of generations: "))
     except ValueError:
         print("Please enter a number")
     else:
         break
         
+=======
+        gens = int(sys.argv[4])
+    except TypeError:
+        sys.exit("Error: please specify how many generations you want to run. Default: 30")
+else:
+    gens = 30
+
+>>>>>>> Stashed changes
 # Default experiment name. Comment to specify your own
 experiment_name = "optimizations/" + algorithm + "_e" + sys.argv[2] + "_gen" + str(gens)
 #experiment_name = "optimizations/[insert name here]"
@@ -145,9 +154,21 @@ for it in range(1,runs+1):
     logpath = run_name + "/data_run_" + str(it-1) + ".txt"
     
     if algorithm == 'NEAT':
+<<<<<<< Updated upstream
         optimizer = NEAT_Spealist(env, gens, picklepath, logpath)
     else:
         optimizer = SANE_Specialist(env, gens, picklepath, logpath, sane_cfg)
+=======
+        optimizer = NEAT_Spealist(env, gens, picklepath, logpath, mode)
+    elif algorithm == 'SANE':
+        optimizer = SANE_Specialist(env, gens, picklepath, logpath, cfg, mode)
+    elif algorithm == 'ESP':
+        optimizer = ESP(env, gens, picklepath, logpath, cfg, mode)
+    
+    tend = time()
+    diff = int(tend - tstart)
+    print(f"Total time for run {it}: {diff // 60}:{diff % 60}")
+>>>>>>> Stashed changes
     
     
 
