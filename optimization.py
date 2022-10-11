@@ -70,7 +70,7 @@ else:
     print("You have selected the following settings:\nAlgorithm:", algorithm, "\nMultiple mode?", mode, "\nEnemies: ", enemies)
 
 # Third argument must indicate the number of optimizations to run (default: 1)
-if len(sys.argv) == 4:
+if len(sys.argv) >= 4:
     try:
         runs = int(sys.argv[3])
     except TypeError:
@@ -86,7 +86,7 @@ print(runs, "individual experiment(s) will be run.")
 
 
 # Fourth argument indicates the number of generations per run (default: 30)
-if len(sys.argv) == 5:
+if len(sys.argv) >= 5:
     try:
         gens = int(sys.argv[4])
     except TypeError:
