@@ -17,7 +17,7 @@
 # imports framework
 import sys, os
 import numpy as np
-from statistics import mean 
+from statistics import mean
 sys.path.insert(0, 'evoman') 
 from environment import Environment
 from NEAT_controller import NeatController
@@ -25,8 +25,8 @@ from demo_controller import player_controller
 import pickle
 
 # Read command line arguments
-if not(len(sys.argv) == 3 or len(sys.argv) == 4):
-    sys.exit("Error: please specify:\n1) the algorithm (NEAT or SANE or ESP)\nthe enemy (1-8) OR the enemies, 123 = enemy 1, 2\n3) the number of games to run (1-5) (default: 1)")
+if not(len(sys.argv) > 2 and len(sys.argv) < 6):
+    sys.exit("Error: please specify:\n1) the algorithm (NEAT or SANE or ESP)\n2)the enemy (1-8) OR the enemies, 123 = enemy 1, 2\n3) the number of games to run (1-5) (default: 1)\n4) If you want to play against all enemies, add 'all'. This will find a solutionfile based on the enemies specified, and run it against all 8 enemies.")
 
 # First argument must indicate the algorithm - 'NEAT' or 'SANE'
 algorithm = sys.argv[1]
@@ -39,10 +39,10 @@ if algorithm == 'sane':
 
 if algorithm == 'esp':
     algorithm = 'ESP'
-#print("First argument: ", algorithm)
 
 if not(algorithm == 'NEAT' or algorithm == 'SANE' or algorithm == 'ESP'):
     sys.exit("Error: please specify the algorithm using 'NEAT' or 'SANE'.")
+
 
 # Second argument must specify the enemy to be trained on - integer from 1 - 8
 try:
@@ -50,8 +50,6 @@ try:
 except TypeError:
     sys.exit("Error: please specify the enemy using an integer from 1 to 8.")
     
-#print("Second argument: ", enemy)
-
 # Check if one or multiple enemies were provided
 if enemy > 0 and enemy < 9:
     mode = 'no'
@@ -66,8 +64,9 @@ else:
             enemies.append(int(e))
     print("You have selected the following settings:\nAlgorithm:", algorithm, "\nMultiple mode?", mode, "\nEnemies: ", enemies)
 
+
 # Third argument must specify how many times to run the solution - integer between 1 and 5 (optional)
-if len(sys.argv) == 4:
+if len(sys.argv) > 3:
     try:
         iterations = int(sys.argv[3])
     except TypeError:
@@ -80,7 +79,16 @@ if len(sys.argv) == 4:
 else:
     iterations = 1
 
-print("\n\n")
+# Fourth argument should be 'all' if running on all 8 enemies (optional)
+all = 'no'
+if len(sys.argv) == 5:
+    all_enemies = [1,2,3,4,5,6,7,8]
+    enemies = [1]
+    mode = 'no'
+    all = 'yes'
+    print("Running against all 8 enemies")
+
+print("\n")
 print(iterations, "game(s) will be played.")
 
 
@@ -107,7 +115,7 @@ else:
     (n_neurons, sane_weights) = pickle.load(open(solutionfile, 'rb'))
     control = player_controller(n_neurons)
 
-if mode == 'no': 
+if all == 'no': 
     enemies = [enemy]
     
 env = Environment(experiment_name=experiment_name,
@@ -115,7 +123,7 @@ env = Environment(experiment_name=experiment_name,
                   playermode="ai",
                   enemies = enemies,
 				  player_controller= control,
-			  	  speed="normal", # fastest or normal
+			  	  speed="fastest", # fastest or normal
 				  enemymode="static",
 				  level=2)
 
@@ -123,43 +131,56 @@ env = Environment(experiment_name=experiment_name,
 if not os.path.exists(solutionfile):
     sys.exit("No solution found.")
 
+# select solution
+if algorithm == "NEAT":
+    sol = pickle.load(open(solutionfile, "rb"))
+else:
+    sol = sane_weights
+
 # clear gain file in case of previous data
 file = open(gain_path, "a")
 file.truncate(0)
 
-list_gain = []    
-for it in range(1,iterations+1):
-    print('\n ITERATION NUMBER '+str(it)+' \n')
-    # speed up runs after the first one
-    if it == 2: env.update_parameter("speed", "fastest")
-    
-    # select solution
-    if algorithm == "NEAT":
-        sol = pickle.load(open(solutionfile, "rb"))
-    else:
-        sol = sane_weights
-    env.play(sol)
-    
-    # calculate individual gain
-    energy_player = env.get_playerlife()
-    energy_enemy = env.get_enemylife()
-    
-    gain = energy_player - energy_enemy
-    print("Individual gain for iteration", it, "is", str(gain))
-    
-    # save to file
-    file = open(gain_path, "a")
-    file.write(str(gain))
-    file.write("\n")
-    file.close()
-    
-    # add to list
-    list_gain.append(gain)
+list_gain = []
+if all == 'yes':
+    for game in all_enemies:
+        env.update_parameter("enemies", [game])
+        f, p, e, t = env.play(sol)
+        gain = p - e
+        list_gain.append(gain)
+        file = open(gain_path, "a")
+        file.write(str(gain))
+        file.write("\n")
+        file.close()
+else:    
+    for it in range(1,iterations+1):
+        print('\n ITERATION NUMBER '+str(it)+' \n')
+        # speed up runs after the first one
+        if it == 2: env.update_parameter("speed", "fastest")
+        
+        f, p, e, t = env.play(sol)
+        
+        # calculate individual gain
+        #energy_player = env.get_playerlife()
+        #energy_enemy = env.get_enemylife()
+            
+        gain = p - e
+        print("Individual gain for iteration", it, "is", str(gain))
+        
+        # save to file
+        file = open(gain_path, "a")
+        file.write(str(gain))
+        file.write("\n")
+        file.close()
+            
+        # add to list
+        list_gain.append(gain) 
 
-# Calculate average if applicable
-if it > 1:
-    average = mean(list_gain)
-    file = open(gain_path, "a")
-    file.write("AVERAGE: ")
-    file.write(str(average))
-    file.close()
+    # Calculate average if applicable
+    if it > 1:
+        average = mean(list_gain)
+        file = open(gain_path, "a")
+        file.write("AVERAGE: ")
+        file.write(str(average))
+        file.close()
+    
