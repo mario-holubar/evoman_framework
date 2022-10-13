@@ -5,7 +5,7 @@ pop_size              = 9
 reset_on_extinction   = False
 
 [DefaultSpeciesSet]
-compatibility_threshold = 3.15
+compatibility_threshold = 3.175
 
 [DefaultStagnation]
 species_fitness_func = max
@@ -76,5 +76,5 @@ weight_init_stdev       = 1.0
 weight_max_value        = 30
 weight_min_value        = -30
 weight_mutate_power     = 0.5
-weight_mutate_rate      = 0.9
+weight_mutate_rate      = 0.875
 weight_replace_rate     = 0.2
