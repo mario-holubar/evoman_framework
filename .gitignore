@@ -2,6 +2,7 @@ optimizations
 solutions
 specialists
 data
+best_solutions
 neat-checkpoint*
 *.pyc
 dummy_demo/evoman_logs.txt
